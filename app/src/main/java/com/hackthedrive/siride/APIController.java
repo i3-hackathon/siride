@@ -37,14 +37,14 @@ public class APIController {
                     control.process(action, main, mapper.readValue(responseBody, HashMap.class));
                 }
                 catch (IOException e){
-                    main.display("Siride", "Unable to map results");
+                    main.display("Siride", "Unable to map results. Result irregular.");
                 }
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                 Log.v("APIController", "GET "+URLBase+val+" Failed.");
-                main.display("Siride", "Request Failed");
+                main.display("Siride", "API request failed. Check your internet.");
             }
         });
     }

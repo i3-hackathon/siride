@@ -16,7 +16,7 @@ public class ActionController {
 
     public enum Action{
         CHECK_BATTERY, CHECK_FUEL, CHECK_DOOR, CHECK_LOCK, CHECK_WINDOW, CHECK_TRUNK, CHECK_ODOMETER
-        ,CHECK_LOCATION, CHECK_LAST;
+        ,CHECK_LOCATION, CHECK_LAST, INVALID;
 
         CommandSet set;
         public Boolean hasQual(String q){return set.getQualifier().contains(q);}
@@ -69,7 +69,7 @@ public class ActionController {
             }
         }
 
-        String[] tmp7 = {"odometer", "odometers", "distance"};
+        String[] tmp7 = {"odometer", "odometers", "distance", "total", "traveled", "travelled", "travel"};
         for(String c: CommandParser.function){
             for(String s: tmp7){
                 actionMap.put(c+"-"+s, Action.CHECK_ODOMETER);
@@ -83,7 +83,7 @@ public class ActionController {
             }
         }
 
-        String[] tmp9 = {"last"};
+        String[] tmp9 = {"last", "trip"};
         for(String c: CommandParser.function){
             for(String s: tmp9){
                 actionMap.put(c+"-"+s, Action.CHECK_LAST);
@@ -93,15 +93,46 @@ public class ActionController {
 
     public Action determineAction(CommandSet c){
         Action act = actionMap.get(c.getFunction()+"-"+c.getParam());
-        act.set=c;
-        return act;
+        if(c!=null && act!=null) {
+            act.set = c;
+            return act;
+        }
+        else
+        {
+           return Action.INVALID;
+        }
     }
 
     public void execute(CommandSet c){
         Action action = determineAction(c);
+        if(c==null || action==Action.INVALID){
+            main.display("Siride", "Invalid Command");
+            return;
+        }
         switch (action){
             case CHECK_BATTERY:
                 api.getCall("battery", action);
+                break;
+            case CHECK_FUEL:
+                api.getCall("fuel", action);
+                break;
+            case CHECK_DOOR:
+                api.getCall("door", action);
+                break;
+            case CHECK_WINDOW:
+                api.getCall("window", action);
+                break;
+            case CHECK_TRUNK:
+                api.getCall("trunk", action);
+                break;
+            case CHECK_ODOMETER:
+                api.getCall("odometer", action);
+                break;
+            case CHECK_LOCATION:
+                api.getCall("location", action);
+                break;
+            case CHECK_LAST:
+                api.getCall("lastTrip", action);
                 break;
             default:
                 main.display("Siride", "Invalid Command");
@@ -116,31 +147,160 @@ public class ActionController {
                     main.display("Siride",
                             "The battery charging status is "+valOf(map, "chargingStatus")+".");
                 }
-                else if((action.hasQual("range")||action.hasQual("ranges")||
-                        action.hasQual("distance")||action.hasQual("distances"))&&action.hasQual("miles")){
-                    main.display("Siride", "The car can travel "+valOf(map, "remainingRangeMi")+" more miles on battery.");
-
-                }
-                else if((action.hasQual("range")||action.hasQual("ranges")||
-                        action.hasQual("distance")||action.hasQual("distances"))&&action.hasQual("kilometers")){
-                    main.display("Siride", "The car can travel "+valOf(map, "remainingRangeKm")+" more kilometers on battery.");
-
-                }
                 else if(action.hasQual("range")||action.hasQual("ranges")||
                         action.hasQual("distance")||action.hasQual("distances")){
-                    main.display("Siride", "The car can travel "+valOf(map, "remainingRangeMi")+" more miles on battery.");
+                    if(action.hasQual("kilometer")||action.hasQual("kilometers")) {
+                        main.display("Siride", "The car can travel " + valOf(map, "remainingRangeMi") + " more miles on battery.");
+                    }
+                    else{
+                        main.display("Siride", "The car can travel "+valOf(map, "remainingRangeMi")+" more miles on battery.");
+                    }
 
+                }
+                else if(
+                        action.hasQual("percent")||action.hasQual("percentage")||action.hasQual("remain")||action.hasQual("remaining"))
+                {
+                    main.display("Siride", valOf(map, "remainingPercent")+" battery percentage remaining.");
                 }
                 else{
                     main.display("Siride", "The battery charging status is "+valOf(map, "chargingStatus")+".\n"+
-                            valOf(map, "remainingPercent")+" battery percent remaining.\n"+
+                            valOf(map, "remainingPercent")+" battery percentage remaining.\n"+
                             "The car can travel "+valOf(map, "remainingRangeMi")+" more miles on battery.");
                 }
+                break;
 
+            case CHECK_FUEL:
+                if(action.hasQual("remaining")||action.hasQual("remain")){
+                    if(action.hasQual("liters")){
+                        main.display("Siride", "The car has "+valOf(map, "remainingLiters")+" liters of gas remaining.");
+                    }
+                    else{
+                        main.display("Siride", "The car has "+valOf(map, "remainingGallons")+" gallons of gas remaining.");
+                    }
+                }
+                else if(action.hasQual("percent")|| action.hasQual("percentage")){
+                    main.display("Siride", valOf(map, "remainingPercent")+" fuel percentage remaining.");
+                }
+                else if(action.hasQual("range")||action.hasQual("ranges")||action.hasQual("distance")||action.hasQual("distances")){
+                    if(action.hasQual("kilometer")||action.hasQual("kilometers")){
+                        main.display("Siride", "The car can travel "+valOf(map, "remainingRangeKm")+" more miles on fuel.");
+                    }
+                    else
+                        main.display("Siride", "The car can travel "+valOf(map, "remainingRangeMi")+" more miles on fuel.");
+                }
+                else{
+                    main.display("Siride", "The car has "+valOf(map, "remainingGallons")+" gallons of gas remaining.\n"+
+                            valOf(map, "remainingPercent")+" fuel percentage remaining.\n"+
+                            "The car can travel "+valOf(map, "remainingRangeMi")+" more miles on fuel.");
+                }
+
+            case CHECK_DOOR:
+                if(action.hasQual("front")){
+                    if(action.hasQual("driver")){
+                        main.display("Siride", "The front driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverFrontOpen")))+".");
+                    }
+                    else if(action.hasQual("passenger")){
+                        main.display("Siride", "The front passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerFrontOpen")))+".");
+                    }
+                    else{
+                        main.display("Siride", "The front driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverFrontOpen")))+".\n"+
+                                    "The front passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerFrontOpen")))+".");
+                    }
+                }
+                else if(action.hasQual("rear")||action.hasQual("back")){
+                    if(action.hasQual("driver")){
+                        main.display("Siride", "The rear driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverRearOpen")))+".");
+                    }
+                    else if(action.hasQual("passenger")){
+                        main.display("Siride", "The rear passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerRearOpen")))+".");
+                    }
+                    else{
+                        main.display("Siride", "The rear driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverRearOpen")))+".\n"+
+                                "The rear passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerRearOpen")))+".");
+
+                    }
+                }
+                else if(action.hasQual("passenger")){
+                    main.display("Siride", "The front passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerFrontOpen")))+".\n"+
+                            "The rear passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerRearOpen")))+".");
+                }
+                else if(action.hasQual("driver")){
+                    main.display("Siride", "The front driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverFrontOpen")))+".\n"+
+                            "The rear driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverRearOpen")))+".");
+                }
+                else{
+                    main.display("Siride", "The front driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverFrontOpen")))+".\n"+
+                            "The front passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerFrontOpen")))+".\n"+
+                            "The rear driver door is "+openClose(Boolean.valueOf(valOf(map, "isDriverRearOpen")))+".\n"+
+                            "The rear passenger door is "+openClose(Boolean.valueOf(valOf(map, "isPassengerRearOpen")))+"."
+                    );
+                }
+                break;
+
+            case CHECK_WINDOW:
+                if(action.hasQual("driver")){
+                    main.display("Siride", "The driver window is "+openClose(Boolean.valueOf(valOf(map, "isDriverOpen")))+".");
+                }
+                else if(action.hasQual("passenger")){
+                    main.display("Siride", "The passenger window is "+openClose(Boolean.valueOf(valOf(map, "isPassengerOpen")))+".");
+                }
+                else{
+                        main.display("Siride", "The driver window is "+openClose(Boolean.valueOf(valOf(map, "isDriverOpen")))+".\n"+
+                                "The passenger window is "+openClose(Boolean.valueOf(valOf(map, "isPassengerOpen")))+".");
+                }
+                break;
+
+            case CHECK_TRUNK:
+                if(action.hasQual("front")){
+                    main.display("Siride", "The front trunk is "+openClose(Boolean.valueOf(valOf(map, "isFrontOpen")))+".");
+                }
+                else if(action.hasQual("back")|| action.hasQual("rear")){
+                    main.display("Siride", "The rear trunk is "+openClose(Boolean.valueOf(valOf(map, "isRearOpen")))+".");
+                }
+                else{
+                        main.display("Siride", "The front trunk is "+openClose(Boolean.valueOf(valOf(map, "isFrontOpen")))+".\n"+
+                                "The rear trunk is "+openClose(Boolean.valueOf(valOf(map, "isRearOpen")))+".");
+                }
+                break;
+
+            case CHECK_ODOMETER:
+                if(action.hasQual("kilometer") || action.hasQual("kilometers")){
+                    main.display("Siride", "You have travelled a total of "+valOf(map, "totalKm")+" kilometers.");
+                }
+                else{
+                    main.display("Siride", "You have travelled a total of "+valOf(map, "totalMi")+" miles.");
+                }
+            break;
+
+            case CHECK_LOCATION:
+                main.display("Siride", "You are heading "+valOf(map, "heading")+" degrees north.\n"+
+                             "Your coordinates are "+valOf(map, "lat")+" latitude and "+valOf(map, "lon")+" longitude.");
+            break;
+
+            case CHECK_LAST:
+                if(action.hasQual("kilometers") || action.hasQual("kilometer")) {
+                    main.display("Siride", "Your last trip was on "+valOf(map, "tripDate")+".\n"+
+                    "You traveled "+valOf(map, "distanceTotalKm")+" kilometers, taking "+valOf(map, "durationMinutes")+" minutes.\n"+
+                    "Your average speed is "+
+                            String.valueOf(
+                                    Double.valueOf(valOf(map, "distanceTotalKm"))/(Double.valueOf(valOf(map, "durationMinutes"))/60))+" km/hr.");
+                }
+                else{
+                    main.display("Siride", "Your last trip was on "+valOf(map, "tripDate")+".\n"+
+                            "You traveled "+valOf(map, "distanceTotalMi")+" miles, taking "+valOf(map, "durationMinutes")+" minutes.\n"+
+                            "Your average speed is "+
+                            String.valueOf(
+                                    Double.valueOf(valOf(map, "distanceTotalMi"))/(Double.valueOf(valOf(map, "durationMinutes"))/60))+" miles/hr.");
+                }
         }
     }
 
     private String valOf(HashMap<String, Object> map, String key){
         return String.valueOf(map.get(key));
+    }
+
+    private String openClose(boolean t){
+        if(t){return "open";}
+        else{return "closed";}
     }
 }
