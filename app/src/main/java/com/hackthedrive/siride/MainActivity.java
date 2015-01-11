@@ -11,6 +11,7 @@ import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.view.Menu;
 import android.view.View;
+import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,7 +22,6 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
 
     // Log tag of the class
     private static final String TAG = "MainActivity Log";
-
     private TextToSpeech tts;
 
     @Override
@@ -69,10 +69,10 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_main, menu);
+//        return true;
+//    }
 }
