@@ -1,6 +1,8 @@
 package com.hackthedrive.siride;
 
 import java.util.ArrayList;
+import java.util.Queue;
+import java.util.LinkedList;
 import java.util.Locale;
 
 import android.util.Log;
@@ -13,6 +15,10 @@ import android.view.Menu;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,12 +30,21 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
     private static final String TAG = "MainActivity Log";
     private TextToSpeech tts;
 
+    // List Adapters
+    ArrayAdapter adapter;
+    ListView listView;
+    ArrayList displayList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findViewById(R.id.button1).setOnClickListener(this);
         tts = new TextToSpeech(this, this);
+        listView = (ListView)findViewById(R.id.listview);
+        displayList = new ArrayList();
+        adapter = new ArrayAdapter<String>(this, R.layout.customlist, displayList);
+        listView.setAdapter(adapter);
     }
 
     @Override
@@ -64,8 +79,15 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode==REQUEST_OK  && resultCode==RESULT_OK) {
             ArrayList<String> thingsYouSaid = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            ((TextView)findViewById(R.id.text1)).setText(thingsYouSaid.get(0));
-            say(thingsYouSaid.get(0));
+            String command = thingsYouSaid.get(0);
+
+            // Remove prompt
+            ((TextView)findViewById(R.id.text1)).setText("");
+
+            say(command);
+            displayList.add(0, "You: "+command);
+            adapter.notifyDataSetChanged();
+
         }
     }
 

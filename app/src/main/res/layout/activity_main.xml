@@ -45,5 +45,16 @@
         app:cb_color="#263238">
     </at.markushi.ui.CircleButton>
 
+    <ListView
+        android:divider="@android:color/white"
+        android:id="@+id/listview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@id/button1"
+        android:layout_below="@id/title"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+    >
+        </ListView>
 
 </RelativeLayout>
