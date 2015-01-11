@@ -14,8 +14,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
         android:text="SIRIDE"
+        android:fontFamily="roboto-condensed"
         android:textSize="80dp"
-        android:textColor="#FFFFFF"
+        android:textColor="#33ccff"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true">
     </TextView>
@@ -26,7 +27,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="130dp"
-        android:text="Tap on mic to speak"
+        android:text="Tap on BMW logo to speak"
         android:textColor="#FFFFFF"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true">
@@ -37,7 +38,7 @@
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:gravity="center_vertical|center_horizontal"
-        android:src="@android:drawable/ic_btn_speak_now"
+        android:src="@drawable/bmw"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="30dp"

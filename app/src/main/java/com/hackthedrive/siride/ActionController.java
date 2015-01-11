@@ -1,7 +1,9 @@
 package com.hackthedrive.siride;
 
 import com.hackthedrive.siride.CommandParser.CommandSet;
+import com.loopj.android.http.RequestParams;
 
+import android.util.Log;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -15,8 +17,8 @@ public class ActionController {
     MainActivity main;
 
     public enum Action{
-        CHECK_BATTERY, CHECK_FUEL, CHECK_DOOR, CHECK_LOCK, CHECK_WINDOW, CHECK_TRUNK, CHECK_ODOMETER
-        ,CHECK_LOCATION, CHECK_LAST, INVALID;
+        CHECK_BATTERY, CHECK_FUEL, CHECK_DOOR, LOCK, CHECK_WINDOW, CHECK_TRUNK, CHECK_ODOMETER
+        ,CHECK_LOCATION, CHECK_LAST, SEND_ADDRESS, HEAD_LIGHT, INVALID, HORN;
 
         CommandSet set;
         public Boolean hasQual(String q){return set.getQualifier().contains(q);}
@@ -45,13 +47,6 @@ public class ActionController {
         for(String c: CommandParser.function){
             for(String s: tmp3){
                 actionMap.put(c+"-"+s, Action.CHECK_DOOR);
-            }
-        }
-
-        String[] tmp4 = {"lock", "locks"};
-        for(String c: CommandParser.function){
-            for(String s: tmp4){
-                actionMap.put(c+"-"+s, Action.CHECK_LOCK);
             }
         }
 
@@ -89,6 +84,29 @@ public class ActionController {
                 actionMap.put(c+"-"+s, Action.CHECK_LAST);
             }
         }
+
+        actionMap.put("send-address",Action.SEND_ADDRESS);
+        actionMap.put("send-addresses",Action.SEND_ADDRESS);
+
+        actionMap.put("set-like", Action.HEAD_LIGHT);
+        actionMap.put("set-likes",Action.HEAD_LIGHT);
+        actionMap.put("set-light", Action.HEAD_LIGHT);
+        actionMap.put("set-lights",Action.HEAD_LIGHT);
+        actionMap.put("set-headlight", Action.HEAD_LIGHT);
+        actionMap.put("set-headlights",Action.HEAD_LIGHT);
+        actionMap.put("lock-null", Action.LOCK);
+        actionMap.put("locks-null", Action.LOCK);
+        actionMap.put("lock-door", Action.LOCK);
+        actionMap.put("lock-doors", Action.LOCK);
+        actionMap.put("lock-vehicle", Action.LOCK);
+        actionMap.put("locks-vehicle", Action.LOCK);
+        actionMap.put("lock-car", Action.LOCK);
+        actionMap.put("honk-null", Action.HORN);
+        actionMap.put("honk-car", Action.HORN);
+        actionMap.put("honk-vehicle", Action.HORN);
+        actionMap.put("horn-null", Action.HORN);
+        actionMap.put("horn-car", Action.HORN);
+        actionMap.put("horn-vehicle", Action.HORN);
     }
 
     public Action determineAction(CommandSet c){
@@ -104,6 +122,8 @@ public class ActionController {
     }
 
     public void execute(CommandSet c){
+        String count;
+
         Action action = determineAction(c);
         if(c==null || action==Action.INVALID){
             main.display("Siride", "Invalid Command");
@@ -133,6 +153,32 @@ public class ActionController {
                 break;
             case CHECK_LAST:
                 api.getCall("lastTrip", action);
+                break;
+            case SEND_ADDRESS:
+                api.postAddress("Navdy HQ", "37.773550", "-122.403309");
+                break;
+            case HEAD_LIGHT:
+                count = "3";
+                for(String s:action.set.getQualifier()){
+                    if(getCount(s) > 0){
+                        count = String.valueOf(getCount(s));
+                        break;
+                    }
+                }
+                api.postLight(count);
+                break;
+            case LOCK:
+                api.postLock("aravind15");
+                break;
+            case HORN:
+                count = "1";
+                for(String s:action.set.getQualifier()){
+                    if(getCount(s) > 0){
+                        count = String.valueOf(getCount(s));
+                        break;
+                    }
+                }
+                api.postHorn("aravind15", count);
                 break;
             default:
                 main.display("Siride", "Invalid Command");
@@ -288,9 +334,9 @@ public class ActionController {
                 else{
                     main.display("Siride", "Your last trip was on "+valOf(map, "tripDate")+".\n"+
                             "You traveled "+valOf(map, "distanceTotalMi")+" miles, taking "+valOf(map, "durationMinutes")+" minutes.\n"+
-                            "Your average speed is "+
+                            "Your average speed was "+
                             String.valueOf(
-                                    Double.valueOf(valOf(map, "distanceTotalMi"))/(Double.valueOf(valOf(map, "durationMinutes"))/60))+" miles/hr.");
+                                    Math.ceil(Double.valueOf(valOf(map, "distanceTotalMi")) / (Double.valueOf(valOf(map, "durationMinutes")) / 60))+" miles/hr."));
                 }
         }
     }
@@ -302,5 +348,29 @@ public class ActionController {
     private String openClose(boolean t){
         if(t){return "open";}
         else{return "closed";}
+    }
+
+    private int getCount(String s){
+        if(s.equalsIgnoreCase("1")||s.equalsIgnoreCase("2")||s.equalsIgnoreCase("3")||s.equalsIgnoreCase("4")||s.equalsIgnoreCase("5")){
+            return Integer.valueOf(s);
+        }
+        else if(s.equalsIgnoreCase("one")){
+            return 1;
+        }
+        else if(s.equalsIgnoreCase("two")){
+            return 2;
+        }
+        else if(s.equalsIgnoreCase("three")){
+            return 3;
+        }
+        else if(s.equalsIgnoreCase("four")){
+            return 4;
+        }
+        else if(s.equalsIgnoreCase("five")){
+            return 5;
+        }
+        else{
+            return 0;
+        }
     }
 }
