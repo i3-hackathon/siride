@@ -1,8 +1,7 @@
 package com.hackthedrive.siride;
 
 import java.util.ArrayList;
-import java.util.Queue;
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.Locale;
 
 import android.util.Log;
@@ -11,14 +10,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
-import android.view.Menu;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +30,11 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
     ListView listView;
     ArrayList displayList;
 
+    // Controllers
+    CommandParser parser;
+    APIController api;
+    ActionController control;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +45,11 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
         displayList = new ArrayList();
         adapter = new ArrayAdapter<String>(this, R.layout.customlist, displayList);
         listView.setAdapter(adapter);
+
+        parser = new CommandParser();
+        api = new APIController("WBY1Z4C55EV273078", this);
+        control = new ActionController(api, this);
+        api.setActionController(control);
     }
 
     @Override
@@ -59,7 +64,7 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
     }
 
     private void say(String text){
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+        tts.speak(text, TextToSpeech.QUEUE_ADD, null);
     }
 
 
@@ -84,11 +89,26 @@ public class MainActivity extends Activity implements OnClickListener, TextToSpe
             // Remove prompt
             ((TextView)findViewById(R.id.text1)).setText("");
 
-            say(command);
-            displayList.add(0, "You: "+command);
-            adapter.notifyDataSetChanged();
+            // Displays what you said
+            display("You", command);
 
+            // Cleaning the command
+            String[] clean = command.trim().split(" ");
+            for(String s: clean){s.toLowerCase();}
+
+            // Getting the command set from parser
+            CommandParser.CommandSet cmd = parser.parseCommand(Arrays.asList(clean));
+
+            // Execute the appropriate command set
+            control.execute(cmd);
         }
+    }
+
+    public void display(String person, String text){
+        String s = person+": "+text;
+        displayList.add(0, s);
+        adapter.notifyDataSetChanged();
+        say(text);
     }
 
 //    @Override
